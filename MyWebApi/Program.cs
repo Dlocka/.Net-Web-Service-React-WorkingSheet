@@ -6,8 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=WorkHours.db"));
+
+var connectionString = builder.Configuration.GetConnectionString("WorkingSheets") ?? "Data Source=WorkingSheets.db";
+
+builder.Services.AddSqlite<AppDbContext>(connectionString);
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 
 builder.Services.AddCors(options =>
@@ -50,7 +52,6 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
-
 
 app.MapControllers();
 app.Run();

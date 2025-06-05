@@ -7,5 +7,5 @@ public class WorkHour
     public TimeOnly EndTime { get; set; }
     public string? TaskDescription { get; set; }
 
-    public Staff Staff { get; set; }
+    public required Staff Staff { get; set; }
 }
