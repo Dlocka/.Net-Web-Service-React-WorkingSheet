@@ -1,4 +1,4 @@
-public interface IUserWriteRepository
+public interface IStaffWriteRepository
 {
     void Add(Staff staff);
     void Update(Staff staff);

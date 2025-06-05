@@ -1,8 +1,8 @@
-public class UserWriteRepository : IUserWriteRepository
+public class StaffWriteRepository : IStaffWriteRepository
 {
     private readonly AppDbContext _context;
 
-    public UserWriteRepository(AppDbContext context)
+    public StaffWriteRepository(AppDbContext context)
     {
         _context = context;
     }

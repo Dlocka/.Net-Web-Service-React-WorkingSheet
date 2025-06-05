@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-public class UserReadRepository : IUserReadRepository
+public class StaffReadRepository : IStaffReadRepository
 {
     private readonly AppDbContext _context;
 
-    public UserReadRepository(AppDbContext context)
+    public StaffReadRepository(AppDbContext context)
     {
         _context = context;
     }
