@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,20 +9,49 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
+//inject
+builder.Services.AddScoped<IStaffReadRepository, StaffReadRepository>();
+builder.Services.AddScoped<IStaffWriteRepository, StaffWriteRepository>();
+builder.Services.AddScoped<IStaffWriter, ManagerService>();
+builder.Services.AddScoped<IStaffReader, ManagerService>();
+
+
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(c =>
+{
+     c.SwaggerDoc("v1", new OpenApiInfo { Title = "TimeSheets API", Description = "Test for backend by Swagger from .Net", Version = "v1" });
+});
+
 var connectionString = builder.Configuration.GetConnectionString("WorkingSheets") ?? "Data Source=WorkingSheets.db";
+//To Do: Change the connection String into Configuration
+
 
 builder.Services.AddSqlite<AppDbContext>(connectionString);
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 
+//Development env CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevCorsPolicy", policy =>
     {
-        policy.WithOrigins(allowedOrigins ?? Array.Empty<string>())
+        // In dev environment, allow all origins
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+
+    //Production env CORS
+    options.AddPolicy("ProductionCorsPolicy", policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
+
+
 var app = builder.Build();
 
 
@@ -30,10 +61,19 @@ if (app.Environment.IsDevelopment())
     app.UseCors("DevCorsPolicy");
 
     app.MapOpenApi();
+    app.UseSwagger();
+
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseCors("ProductionCorsPolicy"); 
 }
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
+//Swagger UI test
+
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"

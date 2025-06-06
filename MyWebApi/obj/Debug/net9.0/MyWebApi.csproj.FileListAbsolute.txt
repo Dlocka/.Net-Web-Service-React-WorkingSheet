@@ -148,3 +148,7 @@ F:\.Net-Web-Service-React-WorkingSheet\MyWebApi\bin\Debug\net9.0\runtimes\win-ar
 F:\.Net-Web-Service-React-WorkingSheet\MyWebApi\bin\Debug\net9.0\runtimes\win-arm64\native\e_sqlite3.dll
 F:\.Net-Web-Service-React-WorkingSheet\MyWebApi\bin\Debug\net9.0\runtimes\win-x64\native\e_sqlite3.dll
 F:\.Net-Web-Service-React-WorkingSheet\MyWebApi\bin\Debug\net9.0\runtimes\win-x86\native\e_sqlite3.dll
+F:\.Net-Web-Service-React-WorkingSheet\MyWebApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+F:\.Net-Web-Service-React-WorkingSheet\MyWebApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+F:\.Net-Web-Service-React-WorkingSheet\MyWebApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+F:\.Net-Web-Service-React-WorkingSheet\MyWebApi\bin\Debug\net9.0\appsettings.Production.json
