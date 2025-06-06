@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class StaffController : ControllerBase
 {
     private readonly IStaffWriter _staffWriter;
@@ -22,6 +22,7 @@ public class StaffController : ControllerBase
     [HttpGet("{id}")]
     public IActionResult GetStaff(int id)
     {
+        Console.WriteLine("StaffController:Lets get Staff");
         var staff = _staffReader.GetStaff(id); // or inject reader separately
         return staff == null ? NotFound() : Ok(staff);
     }

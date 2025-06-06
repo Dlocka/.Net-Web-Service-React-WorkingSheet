@@ -10,6 +10,7 @@ public class StaffReadRepository : IStaffReadRepository
 
     public Staff? GetById(int id)
     {
+        Console.WriteLine("DAL: let's get Staff");
         return _context.Staffs.Find(id);
     }
 

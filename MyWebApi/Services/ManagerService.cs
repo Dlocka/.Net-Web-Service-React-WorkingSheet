@@ -1,3 +1,4 @@
+
 public class ManagerService : IStaffWriter,IStaffReader
 {
     private readonly IStaffReadRepository _StaffReadRepository;
@@ -19,8 +20,14 @@ public class ManagerService : IStaffWriter,IStaffReader
         throw new NotImplementedException();
     }
 
+    public IEnumerable<Staff> GetAll()
+    {
+        return _StaffReadRepository.GetAll();
+    }
+
     public Staff? GetStaff(int id)
     {
+        Console.WriteLine("Manager Service: get stuff");
         return _StaffReadRepository.GetById(id);
     }
 
