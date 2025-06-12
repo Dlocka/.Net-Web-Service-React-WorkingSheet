@@ -26,4 +26,11 @@ public class StaffController : ControllerBase
         var staff = _staffReader.GetStaff(id); // or inject reader separately
         return staff == null ? NotFound() : Ok(staff);
     }
+    
+    [HttpGet()]
+    public IActionResult GetAllStaff()
+    {
+        IEnumerable<Staff> staffList = _staffReader.GetAll();
+        return staffList== null ? NotFound() : Ok(staffList);
+    }
 }

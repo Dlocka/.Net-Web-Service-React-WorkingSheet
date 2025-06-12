@@ -10,14 +10,29 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MyWebApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250604194308_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250611204602_RequireStaffForWorkHour")]
+    partial class RequireStaffForWorkHour
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
+
+            modelBuilder.Entity("Job", b =>
+                {
+                    b.Property<int>("JobId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("JobId");
+
+                    b.ToTable("Jobs");
+                });
 
             modelBuilder.Entity("Staff", b =>
                 {
@@ -43,8 +58,11 @@ namespace MyWebApi.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("TEXT");
 
-                    b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("JobId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("OnWork")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("StaffId")
                         .HasColumnType("INTEGER");
@@ -57,18 +75,28 @@ namespace MyWebApi.Migrations
 
                     b.HasKey("WorkHourId");
 
-                    b.HasIndex("StaffId");
+                    b.HasIndex("JobId");
+
+                    b.HasIndex("Date", "StaffId");
+
+                    b.HasIndex("StaffId", "Date", "StartTime");
 
                     b.ToTable("WorkHours");
                 });
 
             modelBuilder.Entity("WorkHour", b =>
                 {
+                    b.HasOne("Job", "Job")
+                        .WithMany()
+                        .HasForeignKey("JobId");
+
                     b.HasOne("Staff", "Staff")
                         .WithMany("WorkHours")
                         .HasForeignKey("StaffId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Job");
 
                     b.Navigation("Staff");
                 });
