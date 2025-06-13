@@ -15,9 +15,9 @@ public class ManagerService : IStaffWriter,IStaffReader
         _StaffWriterRepository.Add(staff);
     }
 
-    public void DeleteStaff(int id)
+    public bool DeleteStaff(int id)
     {
-        throw new NotImplementedException();
+        return _StaffWriterRepository.Delete(id);
     }
 
     public IEnumerable<Staff> GetAll()

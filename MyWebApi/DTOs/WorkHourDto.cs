@@ -1,18 +1,10 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-public class WorkHour
+public class WorkHourDto
 {
-    public int WorkHourId { get; set; }
     public int StaffId { get; set; }
     public DateOnly Date { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public string? TaskDescription { get; set; }
     public int? JobId { get; set; }
-
-    public Job? Job{ get; set; }
     public bool OnWork { get; set; } = true;
-    [ForeignKey("StaffId")]
-    public  Staff Staff { get; set; }    
 }

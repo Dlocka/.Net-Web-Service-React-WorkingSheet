@@ -15,6 +15,12 @@ builder.Services.AddScoped<IStaffWriteRepository, StaffWriteRepository>();
 builder.Services.AddScoped<IStaffWriter, ManagerService>();
 builder.Services.AddScoped<IStaffReader, ManagerService>();
 
+builder.Services.AddScoped<IWorkHoursReadRepository, WorkHoursReadRepository>();
+builder.Services.AddScoped<IWorkHoursWriteRepository, WorkHoursWriteRepository>();
+builder.Services.AddScoped<IWorkHoursService, WorkHoursService>();
+
+builder.Services.AddScoped<IJobService,JobService>();
+builder.Services.AddScoped<IJobWriteRepository, JobWriteRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 

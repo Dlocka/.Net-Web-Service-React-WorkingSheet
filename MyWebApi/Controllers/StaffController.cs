@@ -26,11 +26,25 @@ public class StaffController : ControllerBase
         var staff = _staffReader.GetStaff(id); // or inject reader separately
         return staff == null ? NotFound() : Ok(staff);
     }
-    
+
     [HttpGet()]
     public IActionResult GetAllStaff()
     {
         IEnumerable<Staff> staffList = _staffReader.GetAll();
-        return staffList== null ? NotFound() : Ok(staffList);
+        return staffList == null ? NotFound() : Ok(staffList);
+    }
+
+    [HttpDelete("{id}",Name = "DeleteStaffById")]
+    public IActionResult DeleteStaff(int id)
+    {
+        bool deleted = _staffWriter.DeleteStaff(id);
+    if (deleted)
+    {
+        return Ok(new { message = $"Staff with id {id} deleted." });
+    }
+    else
+    {
+        return NotFound(new { message = $"Staff with id {id} not found." });
+    }
     }
 }

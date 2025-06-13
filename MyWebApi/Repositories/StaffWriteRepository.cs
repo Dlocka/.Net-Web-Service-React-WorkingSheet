@@ -17,8 +17,14 @@ public class StaffWriteRepository : IStaffWriteRepository
 
     }
     
-    public void Delete(int id){
-        
+    public bool Delete(int id){
+        var staff = _context.Staffs.Find(id);
+    if (staff == null)
+        return false;
+
+    _context.Staffs.Remove(staff);
+    _context.SaveChanges();
+    return true;
     }
 
 }
