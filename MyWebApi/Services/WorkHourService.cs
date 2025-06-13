@@ -32,10 +32,14 @@ public class WorkHoursService : IWorkHoursService
     }
 
     public async Task<(int attempted, int updated, int ignored)> DeleteWorkHoursByFieldsAsync(List<WorkHourDto> dtos)
-{
+    {
     var (attempted, updated, ignored) = await _writer.DeleteWorkHoursByFieldsAsync(dtos);
     return (attempted, updated, ignored);
-}
+    }
 
-    
+    public async Task<List<WorkHour>> CheckOverlapAsync(int staffId, List<WorkHourDto> dtos)
+    {
+        var overlaps = await _reader.CheckOverlapAsync(staffId, dtos);
+        return overlaps;
+    }
 }

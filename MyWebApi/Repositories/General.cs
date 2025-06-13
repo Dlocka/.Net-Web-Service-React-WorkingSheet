@@ -1,13 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-public class WorkHoursReadRepository : IWorkHoursReadRepository
-{
-     private readonly AppDbContext _context;
-     public WorkHoursReadRepository(AppDbContext context)
-    {
-        _context = context;
-    }
 
-    public async Task<List<WorkHour>> CheckOverlapAsync(int staffId, List<WorkHourDto> dtos)
+public static class General
+{
+    //To get all work hours having any overlap with given work hours.
+    public static async Task<IEnumerable<WorkHour>> GetOverlaps(int staffId, List<WorkHourDto> dtos, AppDbContext _context)
     {
         var result = new List<WorkHour>();
 
@@ -30,11 +26,6 @@ public class WorkHoursReadRepository : IWorkHoursReadRepository
         }
 
         return result;
-    }
-    public async Task<IEnumerable<WorkHour>> GetWorkHoursByStaffIdAsync(int staffId)
-    {
-       return await _context.WorkHours
-            .Where(wh => wh.StaffId == staffId)
-            .ToListAsync();
+
     }
 }

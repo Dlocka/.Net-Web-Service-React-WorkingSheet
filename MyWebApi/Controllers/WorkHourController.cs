@@ -36,6 +36,25 @@ public class WorkHourController : ControllerBase
         }
     }
 
+    [HttpPost("check_overlap")]
+    public async Task<IActionResult> CheckOverlap(int staffId, [FromBody] List<WorkHourDto> dtos)
+    {
+        try
+        {
+            var overlaps = await _workHoursService.CheckOverlapAsync(staffId, dtos);
+
+            return Ok(new
+            {
+                hasConflict = overlaps.Any(),
+                overlaps
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpDelete("hours_delete")]
     public async Task<IActionResult> DeleteWorkHours([FromBody] List<int> ids)
     {
