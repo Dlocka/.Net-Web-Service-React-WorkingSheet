@@ -11,83 +11,81 @@ public class WorkHoursWriteRepository : IWorkHoursWriteRepository
     }
 
     public async Task<int> SetWorkHoursAsync(int staffId, List<WorkHourDto> workHourDtos)
+{
+    foreach (var dto in workHourDtos)
     {
-        foreach (var dto in workHourDtos)
+        dto.StaffId = staffId;
+
+        if (dto.EndTime <= dto.StartTime)
         {
-            dto.StaffId = staffId;
-
-            // Validate: Start < End
-            if (dto.EndTime <= dto.StartTime)
-            {
-                throw new ArgumentException($"Invalid time range: EndTime must be after StartTime. Got StartTime: {dto.StartTime}, EndTime: {dto.EndTime}");
-            }
-
-                
-
-            // Get all existing overlaps on same day
-            var overlaps = await _context.WorkHours
-                .Where(w => w.StaffId == staffId && w.Date == dto.Date &&
-                            w.StartTime < dto.EndTime && w.EndTime > dto.StartTime)
-                .ToListAsync();
-
-            // Remove overlapping blocks
-            if (overlaps.Any())
-            {
-                _context.WorkHours.RemoveRange(overlaps);
-            }
-
-            // Add the new block
-            var newWorkHour = new WorkHour
-            {
-                StaffId = dto.StaffId,
-                Date = dto.Date,
-                StartTime = dto.StartTime,
-                EndTime = dto.EndTime,
-                TaskDescription = dto.TaskDescription,
-                JobId = dto.JobId,
-                OnWork = dto.OnWork
-            };
-
-            _context.WorkHours.Add(newWorkHour);
+            throw new ArgumentException($"Invalid time range: EndTime must be after StartTime. Got StartTime: {dto.StartTime}, EndTime: {dto.EndTime}");
         }
 
-        return await _context.SaveChangesAsync();
+        var overlaps = await _context.WorkHours
+            .Where(w => w.StaffId == staffId &&
+                        w.Date == dto.Date &&
+                        w.StartTime < dto.EndTime &&
+                        w.EndTime > dto.StartTime)
+            .ToListAsync();
+
+        foreach (var existing in overlaps)
+        {
+            // Full overlap: new range fully covers old — remove it
+            if (dto.StartTime <= existing.StartTime && dto.EndTime >= existing.EndTime)
+            {
+                _context.WorkHours.Remove(existing);
+            }
+            // Partial overlap at the start: existing starts before and ends inside new
+            else if (existing.StartTime < dto.StartTime && existing.EndTime > dto.StartTime && existing.EndTime <= dto.EndTime)
+            {
+                existing.EndTime = dto.StartTime;
+                _context.Entry(existing).State = EntityState.Modified;
+            }
+            // Partial overlap at the end: existing starts inside and ends after new
+            else if (existing.StartTime >= dto.StartTime && existing.StartTime < dto.EndTime && existing.EndTime > dto.EndTime)
+            {
+                existing.StartTime = dto.EndTime;
+                _context.Entry(existing).State = EntityState.Modified;
+            }
+            // New block is inside existing one → split into two
+            else if (existing.StartTime < dto.StartTime && existing.EndTime > dto.EndTime)
+            {
+                // Modify the existing one to end before new block
+                var secondHalf = new WorkHour
+                {
+                    StaffId = existing.StaffId,
+                    Date = existing.Date,
+                    StartTime = dto.EndTime,
+                    EndTime = existing.EndTime,
+                    TaskDescription = existing.TaskDescription,
+                    JobId = existing.JobId,
+                    OnWork = existing.OnWork
+                };
+
+                existing.EndTime = dto.StartTime;
+
+                _context.Entry(existing).State = EntityState.Modified;
+                _context.WorkHours.Add(secondHalf);
+            }
+        }
+
+        // Add the new block
+        var newWorkHour = new WorkHour
+        {
+            StaffId = dto.StaffId,
+            Date = dto.Date,
+            StartTime = dto.StartTime,
+            EndTime = dto.EndTime,
+            TaskDescription = dto.TaskDescription,
+            JobId = dto.JobId,
+            OnWork = dto.OnWork
+        };
+
+        _context.WorkHours.Add(newWorkHour);
     }
-    // public async Task<int> SetWorkHoursAsync(int staffId, List<WorkHourDto> workHourDtos)
-    // {
-    //     foreach (var dto in workHourDtos)
-    //     {
-    //         dto.StaffId = staffId;
 
-    //         var existing = await _context.WorkHours.FirstOrDefaultAsync(w =>
-    //             w.StaffId == staffId &&
-    //             w.Date == dto.Date &&
-    //             w.StartTime == dto.StartTime);
-
-    //         if (existing == null)
-    //         {
-    //             var newWorkHour = new WorkHour
-    //             {
-    //                 StaffId = dto.StaffId,
-    //                 Date = dto.Date,
-    //                 StartTime = dto.StartTime,
-    //                 TaskDescription = dto.TaskDescription,
-    //                 JobId = dto.JobId,
-    //                 OnWork = dto.OnWork
-    //             };
-    //             _context.WorkHours.Add(newWorkHour);
-    //         }
-    //         else
-    //         {
-    //             existing.TaskDescription = dto.TaskDescription;
-    //             existing.JobId = dto.JobId;
-    //             existing.OnWork = dto.OnWork;
-    //         }
-    //     }
-
-    //     await _context.SaveChangesAsync();
-    //     return workHourDtos.Count;
-    // }
+    return await _context.SaveChangesAsync();
+}
 
     public async Task<int> DeleteWorkHoursByIdsAsync(List<int> ids)
     {
@@ -101,36 +99,34 @@ public class WorkHoursWriteRepository : IWorkHoursWriteRepository
         return workHours.Count;
     }
 
-    public async Task<(int attempted, int updated, int ignored)> SoftDeleteByFieldsAsync(JsonElement json)
+    public async Task<(int attempted, int deleted, int ignored)> DeleteWorkHoursByFieldsAsync(List<WorkHourDto> workHourDtos)
     {
-        if (json.ValueKind != JsonValueKind.Array)
-            throw new ArgumentException("Expected a JSON array.");
+        if (workHourDtos == null || workHourDtos.Count == 0)
+            throw new ArgumentException("Input list cannot be null or empty.");
 
-        int updatedCount = 0;
-        int attempted = json.GetArrayLength();
+        int deletedCount = 0;
+        int attempted = workHourDtos.Count;
 
-        foreach (var element in json.EnumerateArray())
+        foreach (var dto in workHourDtos)
         {
-            int staffId = element.GetProperty("staffId").GetInt32();
-            DateOnly date = DateOnly.Parse(element.GetProperty("date").GetString());
-            TimeOnly startTime = TimeOnly.Parse(element.GetProperty("startTime").GetString());
+            var matches = await _context.WorkHours
+                .Where(w =>
+                    w.StaffId == dto.StaffId &&
+                    w.Date == dto.Date &&
+                    w.StartTime == dto.StartTime &&
+                    w.EndTime == dto.EndTime)
+                .ToListAsync();
 
-            var hours = await _context.WorkHours.Where(w =>
-                w.StaffId == staffId &&
-                w.Date == date &&
-                w.StartTime == startTime &&
-                w.OnWork == true).ToListAsync();
-
-            foreach (var hour in hours)
+            if (matches.Any())
             {
-                hour.OnWork = false;
-                _context.Entry(hour).State = EntityState.Modified;
-                updatedCount++;
+                _context.WorkHours.RemoveRange(matches);
+                deletedCount += matches.Count;
             }
         }
 
         await _context.SaveChangesAsync();
-        return (attempted, updatedCount, attempted - updatedCount);
+
+        return (attempted, deletedCount, attempted - deletedCount);
     }
 
 }

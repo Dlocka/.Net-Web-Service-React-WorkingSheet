@@ -1,5 +1,6 @@
 
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 public class WorkHoursService : IWorkHoursService
 {
     private readonly IWorkHoursWriteRepository _writer;
@@ -23,13 +24,18 @@ public class WorkHoursService : IWorkHoursService
         return await _writer.DeleteWorkHoursByIdsAsync(ids);
     }
 
-    public async Task<(int attempted, int updated, int ignored)> SoftDeleteByFieldsAsync(JsonElement json)
-    {
-        return await _writer.SoftDeleteByFieldsAsync(json);
-    }
+
 
     public async Task<IEnumerable<WorkHour>> GetWorkHoursByStaffIdAsync(int staffId)
     {
         return await _reader.GetWorkHoursByStaffIdAsync(staffId);
     }
+
+    public async Task<(int attempted, int updated, int ignored)> DeleteWorkHoursByFieldsAsync(List<WorkHourDto> dtos)
+{
+    var (attempted, updated, ignored) = await _writer.DeleteWorkHoursByFieldsAsync(dtos);
+    return (attempted, updated, ignored);
+}
+
+    
 }

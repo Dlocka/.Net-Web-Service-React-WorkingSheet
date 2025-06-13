@@ -26,14 +26,14 @@ public class WorkHourController : ControllerBase
     public async Task<IActionResult> SetWorkHours(int staffId, [FromBody] List<WorkHourDto> workHourDtos)
     {
         try
-            {
-                await _workHoursService.SetWorkHoursAsync(staffId, workHourDtos);
-                return Ok();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+        {
+            await _workHoursService.SetWorkHoursAsync(staffId, workHourDtos);
+            return Ok();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpDelete("hours_delete")]
@@ -49,16 +49,20 @@ public class WorkHourController : ControllerBase
         return Ok(new { deleted = deletedCount });
     }
 
-    [HttpDelete("hours_soft_delete_by_field")]
-    public async Task<IActionResult> SoftDeleteByFields([FromBody] JsonElement json)
+    [HttpDelete("hours_delete_by_fields")]
+    public async Task<IActionResult> DeleteByFields([FromBody] List<WorkHourDto> dtos)
     {
-        if (json.ValueKind != JsonValueKind.Array)
-            return BadRequest("Expected a list.");
+        var result = await _workHoursService.DeleteWorkHoursByFieldsAsync(dtos);
 
-        var (attempted, updated, ignored) = await _workHoursService.SoftDeleteByFieldsAsync(json);
-        return Ok(new { attempted, updated, ignored });
+        return Ok(new
+        {
+            attempted = result.attempted,
+            deleted = result.updated,  
+            ignored = result.ignored
+        });
     }
 }
+
 
 
 
