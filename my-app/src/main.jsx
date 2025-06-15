@@ -4,7 +4,10 @@ import './index.css'
 import App from './App.jsx'
 import WorkHourViewer from './StaffSelect.jsx'
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+
     <WorkHourViewer />
-  </StrictMode>,
+    // <StrictMode>
+    //   <WorkHourViewer />
+    // </StrictMode>
+
 )

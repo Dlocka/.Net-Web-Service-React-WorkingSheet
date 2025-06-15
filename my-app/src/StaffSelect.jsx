@@ -1,19 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState ,useRef} from "react";
 import './WorkHourViewer.css';
 function WorkHourViewer() {
+  const maxChar_des=30;
   const [staffList, setStaffList] = useState([]);
   const [selectedStaffId, setSelectedStaffId] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [workHours, setWorkHours] = useState([]);
-  const[JobList,setJobList]=useState([]);
+  const [JobList,setJobList]=useState([]);
   const [selectedJobId, setSelectedJobId]=useState(null);
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
+
+  const refreshWorkHours = () => {
+    
+
+    const isoStart = weekDates[0].toISOString().split("T")[0];
+    const isoEnd = weekDates[6].toISOString().split("T")[0];
+
+    fetch(`${apiUrl}/WorkHour/get_workhours_byrange/${selectedStaffId}?startDate=${isoStart}&endDate=${isoEnd}`)
+      .then((res) => res.json())
+      .then(setWorkHours)
+      .catch(console.error);
+  };
 
   const apiUrl = import.meta.env.VITE_API_URL;
+
+
 
   const getWeekRange = (date) => {
   const monday = new Date(date);
@@ -63,7 +79,7 @@ console.log("endTime:", endTime);
   date: date.toISOString().split("T")[0],
   startTime: `${startTime}:00`,
   endTime: `${endTime}:00`,
-  taskDescription: "Manual input",
+  taskDescription: taskDescription,
 }));
 console.log(workHourDtos);
   try {
@@ -78,7 +94,16 @@ console.log(workHourDtos);
 
     if (response.ok) {
       alert("Work hours set successfully!");
-    } else {
+      console.log('try to refresh after set');
+      if (!selectedStaffId) {
+      
+      alert('No selected staff')
+      return;
+      }
+       // Refresh work hours
+      refreshWorkHours();
+    } 
+    else {
       const error = await response.text();
       alert(`Error: ${error}`);
     }
@@ -105,18 +130,22 @@ console.log(workHourDtos);
 
 
  
-
+  const hasInitializedPage = useRef(false); 
   // Fetch work hours when staff or selectedDate changes
   useEffect(() => {
-    if (selectedStaffId !== null) {
-      const isoStart = weekDates[0].toISOString().split("T")[0];
-      const isoEnd = weekDates[6].toISOString().split("T")[0];
-      fetch(`${apiUrl}/WorkHour/get_workhours_byrange/${selectedStaffId}?startDate=${isoStart}&endDate=${isoEnd}`)
-        .then((res) => res.json())
-        .then(setWorkHours)
-        .catch(console.error);
+    console.log('staff or date changed');
+     if (!selectedStaffId) {
+      if (hasInitializedPage.current) {
+        alert('No selected staff');
+      }
+      return;
     }
+    refreshWorkHours();
   }, [selectedStaffId, selectedDate]); //when either changed, trigger refresh
+
+  useEffect(() => {
+    hasInitializedPage.current = true; // set to true after first mount
+  }, []);
 
 
 return (
@@ -158,6 +187,16 @@ return (
 
         </select>
       </div>
+<div className="form-section">
+  <label>Task Description (max {maxChar_des} chars):</label>
+  <input
+    type="text"
+    value={taskDescription}
+    maxLength={maxChar_des} // UI enforcement
+    onChange={(e) => setTaskDescription(e.target.value)}
+    placeholder="Describe the task"
+  />
+</div>
 
 <div className="form-section">
   <label>Start Date:</label>
