@@ -112,6 +112,43 @@ console.log(workHourDtos);
   }
 };
 
+const handleCancelWorkTime = async () => {
+  if (!selectedStaffId ||  !startDate || !endDate || !startTime || !endTime) {
+    alert("Please fill all fields to cancel.");
+    return;
+  }
+
+  const dateRange = getDateRange(startDate, endDate);
+  const deleteDtos = dateRange.map(date => ({
+    staffId: selectedStaffId,
+    jobId: selectedJobId,
+    onWork: true,
+    date: date.toISOString().split("T")[0],
+    startTime: `${startTime}:00`,
+    endTime: `${endTime}:00`,
+    taskDescription: taskDescription || "", // Optional
+  }));
+
+  try {
+    const response = await fetch(`${apiUrl}/WorkHour/hours_delete_by_fields`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(deleteDtos),
+    });
+
+    if (response.ok) {
+      alert("Work time cancelled successfully.");
+      refreshWorkHours();
+    } else {
+      const err = await response.text();
+      alert("Failed to cancel work time: " + err);
+    }
+  } catch (err) {
+    alert("Network error: " + err.message);
+  }
+};
   // Fetch all staff on mount
   useEffect(() => {
     fetch(`${apiUrl}/staff`)
@@ -239,7 +276,7 @@ return (
 
       <div className="form-section button-group">
         <button onClick={handleSetWorkTime}>Set Work Time</button>
-        <button>Cancel Work Time</button>
+        <button onClick={handleCancelWorkTime}>Cancel Work Time</button>
         <button>Query Remaining Hours</button>
       </div>
     </div>
