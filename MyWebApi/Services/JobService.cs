@@ -1,15 +1,21 @@
+
 public class JobService : IJobService
 {
     private readonly IJobWriteRepository _jobWriteRepository;
-
-    public JobService(IJobWriteRepository jobWriteRepository)
+    private readonly IJobReadRepository _jobReadRepository;
+    public JobService(IJobWriteRepository jobWriteRepository, IJobReadRepository jobReadRepository)
     {
         _jobWriteRepository = jobWriteRepository;
+        _jobReadRepository = jobReadRepository;
     }
 
-    public async Task<Job> CreateJobAsync(Job job)
+     public async Task<Job> CreateJobAsync(JobCreateDto createJobDto)
     {
-        // Here you can add any extra validation/business logic before creating
-        return await _jobWriteRepository.CreateJobAsync(job);
+       return await _jobWriteRepository.CreateJobAsync(createJobDto);
+    }
+
+    public async Task<IEnumerable<Job>> GetAllJobs()
+    {
+        return await _jobReadRepository.GetAllJobs();
     }
 }

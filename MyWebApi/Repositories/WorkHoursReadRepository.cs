@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 public class WorkHoursReadRepository : IWorkHoursReadRepository
 {
-     private readonly AppDbContext _context;
-     public WorkHoursReadRepository(AppDbContext context)
+    private readonly AppDbContext _context;
+    public WorkHoursReadRepository(AppDbContext context)
     {
         _context = context;
     }
@@ -33,8 +33,17 @@ public class WorkHoursReadRepository : IWorkHoursReadRepository
     }
     public async Task<IEnumerable<WorkHour>> GetWorkHoursByStaffIdAsync(int staffId)
     {
-       return await _context.WorkHours
-            .Where(wh => wh.StaffId == staffId)
+        return await _context.WorkHours
+             .Where(wh => wh.StaffId == staffId)
+             .Include(wh => wh.Job)
+             .Include(wh => wh.Staff)
+             .ToListAsync();
+    }
+    
+    public async Task<IEnumerable<WorkHour>> GetWorkHoursInRange(int staffId, DateOnly startDate, DateOnly endDate)
+    {
+        return await _context.WorkHours
+            .Where(wh => wh.StaffId == staffId && wh.Date >= startDate && wh.Date <= endDate)
             .ToListAsync();
     }
 }

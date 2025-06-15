@@ -19,8 +19,10 @@ builder.Services.AddScoped<IWorkHoursReadRepository, WorkHoursReadRepository>();
 builder.Services.AddScoped<IWorkHoursWriteRepository, WorkHoursWriteRepository>();
 builder.Services.AddScoped<IWorkHoursService, WorkHoursService>();
 
-builder.Services.AddScoped<IJobService,JobService>();
+
 builder.Services.AddScoped<IJobWriteRepository, JobWriteRepository>();
+builder.Services.AddScoped<IJobReadRepository, JobReadRepository>();
+builder.Services.AddScoped<IJobService,JobService>();
 
 builder.Services.AddEndpointsApiExplorer();
 

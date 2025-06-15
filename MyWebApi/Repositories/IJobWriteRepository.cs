@@ -1,4 +1,4 @@
 public interface IJobWriteRepository
 {
-    Task<Job> CreateJobAsync(Job job);
+    Task<Job> CreateJobAsync(JobCreateDto job);
 }

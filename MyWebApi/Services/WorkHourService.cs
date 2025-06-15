@@ -42,4 +42,10 @@ public class WorkHoursService : IWorkHoursService
         var overlaps = await _reader.CheckOverlapAsync(staffId, dtos);
         return overlaps;
     }
+
+    public async Task<IEnumerable<WorkHour>> GetWorkHoursInRange(int staffId, DateOnly startDate, DateOnly endDate)
+    {
+        var WorkHours = await _reader.GetWorkHoursInRange(staffId, startDate, endDate);
+        return WorkHours;
+    }
 }

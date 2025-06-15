@@ -1,4 +1,5 @@
 public interface IJobService
 {
-    Task<Job> CreateJobAsync(Job job);
+    Task<Job> CreateJobAsync(JobCreateDto createJobDto);
+    Task<IEnumerable<Job>> GetAllJobs();
 }

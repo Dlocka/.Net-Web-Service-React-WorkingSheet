@@ -76,9 +76,30 @@ public class WorkHourController : ControllerBase
         return Ok(new
         {
             attempted = result.attempted,
-            deleted = result.updated,  
+            deleted = result.updated,
             ignored = result.ignored
         });
+    }
+    
+    [HttpGet("get_workhours_byrange/{staffId}")]
+    public async Task<IActionResult> GetWorkHoursInRange(int staffId, DateOnly startDate, DateOnly endDate)
+    {
+        // if not explicit the type, response body will return the entire object of 'var'ff, like 
+        #region {
+        // "result": [ /* ... array of work hours ... */ ],
+        // "id": 8,
+        // "exception": null,
+        // "status": 5,
+        // "isCanceled": false,
+        // "isCompleted": true,
+        // "isCompletedSuccessfully": true,
+        // "creationOptions": 0,
+        // "asyncState": null,
+        // "isFaulted": false
+    #endregion
+        IEnumerable<WorkHour> WorkHours = await _workHoursService.GetWorkHoursInRange(staffId, startDate, endDate);
+        return Ok(WorkHours);
+        
     }
 }
 

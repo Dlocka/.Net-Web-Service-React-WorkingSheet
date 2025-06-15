@@ -11,17 +11,19 @@ public class JobController : ControllerBase
         _jobService = jobService;
     }
 
-    [HttpPost("create")]
-    public async Task<IActionResult> CreateJob([FromBody] Job job)
+    
+
+    [HttpPost("create")] // Example route
+    public async Task<IActionResult> CreateJob([FromBody] JobCreateDto createJobDto)
     {
-        if (string.IsNullOrWhiteSpace(job.Name))
+
+        if (string.IsNullOrWhiteSpace(createJobDto.Name))
         {
             return BadRequest("Job name is required.");
         }
-
-        var createdJob = await _jobService.CreateJobAsync(job);
-         return CreatedAtAction(nameof(GetJobById), new { id = createdJob.JobId }, createdJob);
-        
+        // The service handles mapping CreateJobDto to Job entity and saving
+        Job createdJob = await _jobService.CreateJobAsync(createJobDto);
+        return Ok(createdJob);
     }
 
     [HttpGet("{id}")]
@@ -30,4 +32,15 @@ public class JobController : ControllerBase
         // Placeholder - implement this if you want
         return Ok();
     }
+    [HttpGet("get_jobs_all")]
+
+    public async Task<IActionResult> GetAllJobs()
+    {
+
+        IEnumerable<Job> jobs = await _jobService.GetAllJobs();
+
+        // Return the jobs with an OK (200) status
+        return Ok(jobs);
+    }
+
 }
