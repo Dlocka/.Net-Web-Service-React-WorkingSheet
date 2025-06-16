@@ -33,8 +33,8 @@ public class WorkHoursService : IWorkHoursService
 
     public async Task<(int attempted, int updated, int ignored)> DeleteWorkHoursByFieldsAsync(List<WorkHourDto> dtos)
     {
-    var (attempted, updated, ignored) = await _writer.DeleteWorkHoursByFieldsAsync(dtos);
-    return (attempted, updated, ignored);
+        var (attempted, updated, ignored) = await _writer.DeleteWorkHoursByFieldsAsync(dtos);
+        return (attempted, updated, ignored);
     }
 
     public async Task<List<WorkHour>> CheckOverlapAsync(int staffId, List<WorkHourDto> dtos)
@@ -48,4 +48,32 @@ public class WorkHoursService : IWorkHoursService
         var WorkHours = await _reader.GetWorkHoursInRange(staffId, startDate, endDate);
         return WorkHours;
     }
+
+    public Task<double> CalculateRemainingMinutesAsync(int staffId, DateTime now, DateTime end)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<double> GetRemainingWorkMinutesFromNowAsync(int staffId, int JobId, DateTime endDateTime)
+    {
+        return await _reader.GetRemainingWorkMinutesAsync(staffId, JobId,DateTime.Now, endDateTime);
+    }
+    public async Task<List<DateOnly>> GetOvertimeDaysAsync(int staffId, DateOnly start, DateOnly end)
+    {
+        var records = await _reader.GetWorkHoursInRangeAsync(staffId, start, end);
+
+        return records
+            .GroupBy(wh => wh.Date)
+            .Select(group => new {
+                Date = group.Key,
+                TotalMinutes = group.Sum(wh =>
+                    (wh.EndTime.ToTimeSpan() - wh.StartTime.ToTimeSpan()).TotalMinutes
+                )
+            })
+            .Where(g => g.TotalMinutes > 600) // 10 hours
+            .Select(g => g.Date)
+            .ToList();
+    }
+
+
 }

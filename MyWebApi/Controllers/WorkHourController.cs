@@ -43,6 +43,34 @@ public class WorkHourController : ControllerBase
         
     }
 
+    [HttpGet("remaining_worktime")]
+    public async Task<IActionResult> GetRemainingWorkTimeFromNow(int staffId, int JobId,string endDate, string endTime)
+{
+        Console.WriteLine(endDate);
+        Console.WriteLine(endTime);
+    if (!DateOnly.TryParse(endDate, out var parsedDate) ||
+                !TimeOnly.TryParse(endTime, out var parsedTime))
+        {
+            return BadRequest("Invalid date or time format.");
+        }
+
+    var endDateTime = parsedDate.ToDateTime(parsedTime);
+
+    if (DateTime.Now >= endDateTime)
+        return BadRequest("End time must be in the future.");
+
+    var remainingMinutes = await _workHoursService.GetRemainingWorkMinutesFromNowAsync(staffId,JobId, endDateTime);
+    return Ok(new { remainingMinutes });
+}
+
+    [HttpGet("get_overtime_days/{staffId}")]
+    public async Task<IActionResult> GetOvertimeDays(int staffId, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+    {
+        var result = await _workHoursService.GetOvertimeDaysAsync(staffId, startDate, endDate);
+        return Ok(result);
+    }
+
+
     [HttpPost("hours_set_byStaff/{staffId}")]
     public async Task<IActionResult> SetWorkHours(int staffId, [FromBody] List<WorkHourDto> workHourDtos)
     {

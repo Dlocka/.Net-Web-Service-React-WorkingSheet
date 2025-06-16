@@ -8,4 +8,7 @@ public interface IWorkHoursService
     Task<IEnumerable<WorkHour>> GetWorkHoursByStaffIdAsync(int staffId);
     Task<List<WorkHour>> CheckOverlapAsync(int staffId, List<WorkHourDto> dtos);
     Task<IEnumerable<WorkHour>> GetWorkHoursInRange(int staffId, DateOnly startDate, DateOnly endDate);
+    Task<double> CalculateRemainingMinutesAsync(int staffId,  DateTime startDateTime,DateTime endDateTime);
+    Task<double> GetRemainingWorkMinutesFromNowAsync(int staffId, int jobId, DateTime endDateTime);
+    Task<List<DateOnly>> GetOvertimeDaysAsync(int staffId, DateOnly start, DateOnly end);
 }

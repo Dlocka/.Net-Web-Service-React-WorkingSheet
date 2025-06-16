@@ -1,13 +1,23 @@
-import { useEffect, useState ,useRef} from "react";
+import { useEffect, useState ,useRef,useMemo} from "react";
 import './WorkHourViewer.css';
 function WorkHourViewer() {
   const maxChar_des=30;
   const [staffList, setStaffList] = useState([]);
   const [selectedStaffId, setSelectedStaffId] = useState(null);
+  // const [selectedStaffName,selSelectedStaffName]=useState(null);
+  const selectedStaffName = useMemo(() => {
+  return staffList.find(s => s.staffId === selectedStaffId)?.name || "";
+}, [selectedStaffId, staffList]);
+
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [workHours, setWorkHours] = useState([]);
   const [JobList,setJobList]=useState([]);
   const [selectedJobId, setSelectedJobId]=useState(null);
+  const selectedJobName = useMemo(() => {
+  return JobList.find(s => s.jobId === selectedJobId)?.name || "";
+}, [selectedStaffId, staffList]);
+
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -149,6 +159,61 @@ const handleCancelWorkTime = async () => {
     alert("Network error: " + err.message);
   }
 };
+
+const handleQueryOvertime = async () => {
+  if (!selectedStaffId || !startDate || !endDate) {
+    alert("Please select staff, start date, and end date.");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${apiUrl}/WorkHour/get_overtime_days/${selectedStaffId}?startDate=${startDate}&endDate=${endDate}`
+    );
+
+    if (response.ok) {
+      const result = await response.json(); // e.g., ["2025-06-10", "2025-06-12"]
+      alert("overworkDays: "+result);
+    } else {
+      const err = await response.text();
+      alert("Failed to fetch overtime days: " + err);
+    }
+  } catch (err) {
+    alert("Network error: " + err.message);
+  }
+};
+
+const handleQueryRemainingMinutes = async () => {
+  console.log(selectedStaffId);
+  console.log(selectedJobId);
+  console.log(endDate);
+  console.log(endTime);
+  if (!selectedStaffId || !selectedJobId || !endTime || !endDate) {
+    alert("Please select staff, job, end time, and end date.");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${apiUrl}/WorkHour/remaining_worktime?staffId=${selectedStaffId}&jobId=${selectedJobId}&endDate=${endDate}&endTime=${endTime}`
+    );
+
+    if (response.ok) {
+      const result = await response.json(); // a number
+      const roundedMinutes = Math.round(result.remainingMinutes);
+      const hours = Math.floor(roundedMinutes / 60);
+      const minutes = roundedMinutes % 60;
+      const timeFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      alert(`Remaining work time for ${selectedStaffName} at ${selectedJobName} until ${endTime} ${endDate} is ${timeFormatted}`);
+    } else {
+      const err = await response.text();
+      alert("Failed to fetch remaining minutes: " + err);
+    }
+  } catch (err) {
+    alert("Network error: " + err.message);
+  }
+};
+
   // Fetch all staff on mount
   useEffect(() => {
     fetch(`${apiUrl}/staff`)
@@ -202,7 +267,10 @@ return (
         <label>Staff:</label>
         <select
           value={selectedStaffId ?? ""}
-          onChange={(e) => setSelectedStaffId(Number(e.target.value))}
+          onChange={(e) => {
+            setSelectedStaffId(Number(e.target.value));
+            
+          }}
         >
           <option value="" disabled>Choose staff</option>
           {staffList.map((staff) => (
@@ -273,51 +341,58 @@ return (
 
 
 
-
       <div className="form-section button-group">
         <button onClick={handleSetWorkTime}>Set Work Time</button>
         <button onClick={handleCancelWorkTime}>Cancel Work Time</button>
-        <button>Query Remaining Hours</button>
+        <button onClick={handleQueryRemainingMinutes}>Query Remaining Time</button>
+        <button onClick={handleQueryOvertime}>Over Work Days Check</button>
       </div>
     </div>
 
     {/* RIGHT PANEL */}
     <div className="calendar-view">
-      <div></div>
-      {weekDates.map((date, i) => (
-        <div key={i} className="calendar-header">
-          {date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric" })}
-        </div>
-      ))}
+  <div className="calendar-header-empty"></div>
+  {weekDates.map((date, i) => (
+    <div key={i} className="calendar-header">
+      {date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric" })}
+    </div>
+  ))}
 
+  <div className="calendar-body">
+    <div className="time-column">
       {Array.from({ length: 24 }).map((_, hour) => (
-        <>
-          <div className="hour-cell">{`${hour}:00`}</div>
-          {weekDates.map((date, col) => {
-            const dateStr = date.toISOString().split("T")[0];
-            const blocks = workHours.filter(
-              (wh) => wh.date === dateStr && parseInt(wh.startTime.split(":")[0]) === hour
-            );
+        <div key={hour} className="hour-label">{`${hour}:00`}</div>
+      ))}
+    </div>
+
+    {weekDates.map((date, col) => {
+      const dateStr = date.toISOString().split("T")[0];
+      const blocks = workHours.filter(wh => wh.date === dateStr);
+
+      return (
+        <div key={col} className="day-column">
+          {blocks.map((block, i) => {
+            const startMin = parseTime(block.startTime);
+            const endMin = parseTime(block.endTime);
+            const top = (startMin / 60) * 40;       // 40px per hour
+            const height = ((endMin - startMin) / 60) * 40;
+
             return (
-              <div key={`${col}-${hour}`} className="cell-block">
-                {blocks.map((block, i) => {
-                  const durationHours = (parseTime(block.endTime) - parseTime(block.startTime)) / 60;
-                  return (
-                    <div
-                      key={i}
-                      className="hour-block"
-                      style={{ height: `${durationHours * 40}px` }}
-                    >
-                      {block.taskDescription || "Task"}
-                    </div>
-                  );
-                })}
+              <div
+                key={i}
+                className="hour-block"
+                style={{ top: `${top}px`, height: `${height}px` }}
+              >
+                {block.taskDescription || "Task"}
               </div>
             );
           })}
-        </>
-      ))}
+        </div>
+      );
+    })}
+  </div>
     </div>
+
   </div>
 );
 

@@ -31,6 +31,39 @@ public class WorkHoursReadRepository : IWorkHoursReadRepository
 
         return result;
     }
+
+    public async Task<double> GetRemainingWorkMinutesAsync(int staffId, int jobId, DateTime from, DateTime endDateTime)
+{
+    var now = from;
+
+    if (endDateTime <= now)
+        return 0; // If the end time is before 'now', there's no remaining time.
+
+    var workHours = await _context.WorkHours
+        .Where(wh => wh.StaffId == staffId && wh.JobId == jobId && wh.OnWork)
+        .ToListAsync();
+
+    double totalMinutes = 0;
+
+    foreach (var wh in workHours)
+    {
+        var startDateTime = wh.Date.ToDateTime(wh.StartTime);
+        var endDateTimeOfWork = wh.Date.ToDateTime(wh.EndTime);
+
+        // Only consider work periods that overlap with [now, endDateTime]
+        if (endDateTimeOfWork <= now || startDateTime >= endDateTime)
+            continue;
+
+        var effectiveStart = startDateTime < now ? now : startDateTime;
+        var effectiveEnd = endDateTimeOfWork > endDateTime ? endDateTime : endDateTimeOfWork;
+
+        totalMinutes += (effectiveEnd - effectiveStart).TotalMinutes;
+    }
+
+    return totalMinutes;
+}
+
+
     public async Task<IEnumerable<WorkHour>> GetWorkHoursByStaffIdAsync(int staffId)
     {
         return await _context.WorkHours
@@ -44,6 +77,13 @@ public class WorkHoursReadRepository : IWorkHoursReadRepository
     {
         return await _context.WorkHours
             .Where(wh => wh.StaffId == staffId && wh.Date >= startDate && wh.Date <= endDate)
+            .ToListAsync();
+    }
+
+    public async Task<List<WorkHour>> GetWorkHoursInRangeAsync(int staffId, DateOnly start, DateOnly end)
+    {
+        return await _context.WorkHours
+            .Where(wh => wh.StaffId == staffId && wh.Date >= start && wh.Date <= end)
             .ToListAsync();
     }
 }
