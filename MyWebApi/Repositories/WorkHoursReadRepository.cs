@@ -32,8 +32,51 @@ public class WorkHoursReadRepository : IWorkHoursReadRepository
         return result;
     }
 
+    public async Task<List<OverworkRecordDto>> GetOverworkDaysAsync(double thresholdHours = 10)
+    {
+   // First, execute the GroupBy and select necessary raw data into memory
+    // This part runs on the database as much as possible for SQLite
+    var rawGroupedData = await _context.WorkHours
+        .Include(w => w.Staff) // This include is still important for Staff.Name
+        .GroupBy(w => new { w.StaffId, w.Date, w.Staff.Name })
+        .Select(g => new
+        {
+            // Select the key components and the raw StartTime/EndTime for each group.
+            // We use Max/Min here to get the boundaries for the day from potentially multiple entries.
+            // SQLite might still struggle with TimeOnly itself in this initial Select,
+            // so we might need to project it as string or another compatible type if it's stored that way.
+            // Assuming your WorkHour.StartTime and EndTime are mapped to TimeOnly properly by EF Core
+            // for the database query part, this should be fine.
+            StaffId = g.Key.StaffId, // Keep StaffId if you need it for debugging/tracing, not strictly required for final DTO
+            Date = g.Key.Date,
+            StaffName = g.Key.Name,
+            MinStartTime = g.Min(w => w.StartTime), // Get the earliest start time for the day
+            MaxEndTime = g.Max(w => w.EndTime)     // Get the latest end time for the day
+        })
+        .ToListAsync(); // <-- Execute this part of the query on the database asynchronously
+
+    // Now, perform the TimeOnly.ToTimeSpan() calculation and filtering in-memory
+    var overworkRecords = rawGroupedData
+        .Select(x => new
+        {
+            x.Date,
+            x.StaffName,
+            // Perform the TimeOnly to TimeSpan conversion and calculation in-memory
+            TotalMinutes = (x.MaxEndTime.ToTimeSpan() - x.MinStartTime.ToTimeSpan()).TotalMinutes
+        })
+        .Where(x => x.TotalMinutes > thresholdHours * 60)
+        .Select(x => new OverworkRecordDto
+        {
+            Date = x.Date,
+            StaffName = x.StaffName
+        })
+        .ToList(); // <-- Use ToList() because it's an in-memory IEnumerable<T> now
+
+    return overworkRecords;
+    }
+
     public async Task<double> GetRemainingWorkMinutesAsync(int staffId, int jobId, DateTime from, DateTime endDateTime)
-{
+    {
     var now = from;
 
     if (endDateTime <= now)

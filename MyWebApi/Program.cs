@@ -15,6 +15,8 @@ builder.Services.AddScoped<IStaffWriteRepository, StaffWriteRepository>();
 builder.Services.AddScoped<IStaffWriter, ManagerService>();
 builder.Services.AddScoped<IStaffReader, ManagerService>();
 
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+
 builder.Services.AddScoped<IWorkHoursReadRepository, WorkHoursReadRepository>();
 builder.Services.AddScoped<IWorkHoursWriteRepository, WorkHoursWriteRepository>();
 builder.Services.AddScoped<IWorkHoursService, WorkHoursService>();
@@ -62,7 +64,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-
+app.UseCors(app.Environment.IsDevelopment() ? "DevCorsPolicy" : "ProductionCorsPolicy");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

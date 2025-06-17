@@ -214,6 +214,39 @@ const handleQueryRemainingMinutes = async () => {
   }
 };
 
+const handleQueryOverworkByEmail = async () => {
+  const email = prompt("Enter email to send overwork report to:");
+
+  if (!email) {
+    alert("Email is required.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}/WorkHour/overwork-days/email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const result = await response.json(); // { message: "Email sent successfully." }
+
+    if (response.ok) {
+      alert(result.message);
+    } else {
+      alert("Failed: " + result.message);
+    }
+  } catch (err) {
+    alert("Network error: " + err.message);
+  }
+};
+
+
+
+
+
   // Fetch all staff on mount
   useEffect(() => {
     fetch(`${apiUrl}/staff`)
@@ -256,7 +289,7 @@ return (
     <div className="left-panel">
       <div className="form-section">
         <label>Date:</label>
-        <input
+        <input className="board_input_select"
           type="date"
           value={selectedDate.toISOString().split("T")[0]}
           onChange={(e) => setSelectedDate(new Date(e.target.value))}
@@ -265,7 +298,7 @@ return (
 
       <div className="form-section">
         <label>Staff:</label>
-        <select
+        <select className="board-select"
           value={selectedStaffId ?? ""}
           onChange={(e) => {
             setSelectedStaffId(Number(e.target.value));
@@ -281,7 +314,7 @@ return (
 
       <div className="form-section">
         <label>Job:</label>
-        <select value={selectedJobId ?? ""}onChange={(e) => setSelectedJobId(Number(e.target.value))}>
+        <select className="board-select" value={selectedJobId ?? ""}onChange={(e) => setSelectedJobId(Number(e.target.value))}>
           <option value="" disabled>Choose Job</option>
           {
             JobList.map((job)=>
@@ -294,7 +327,7 @@ return (
       </div>
 <div className="form-section">
   <label>Task Description (max {maxChar_des} chars):</label>
-  <input
+  <input className="board_input_input"
     type="text"
     value={taskDescription}
     maxLength={maxChar_des} // UI enforcement
@@ -305,7 +338,7 @@ return (
 
 <div className="form-section">
   <label>Start Date:</label>
-  <input
+  <input className="board_input_select"
     type="date"
     value={startDate}
     onChange={(e) => setStartDate(e.target.value)}
@@ -314,7 +347,7 @@ return (
 
 <div className="form-section">
   <label>End Date:</label>
-  <input
+  <input className="board_input_select"
     type="date"
     value={endDate}
     onChange={(e) => setEndDate(e.target.value)}
@@ -323,7 +356,7 @@ return (
 
 <div className="form-section">
   <label>Start Time:</label>
-  <input
+  <input className="board_input_select"
     type="time"
     value={startTime}
     onChange={(e) => setStartTime(e.target.value)}
@@ -332,7 +365,7 @@ return (
 
 <div className="form-section">
   <label>End Time:</label>
-  <input
+  <input className="board_input_select"
     type="time"
     value={endTime}
     onChange={(e) => setEndTime(e.target.value)}
@@ -342,10 +375,12 @@ return (
 
 
       <div className="form-section button-group">
-        <button onClick={handleSetWorkTime}>Set Work Time</button>
-        <button onClick={handleCancelWorkTime}>Cancel Work Time</button>
-        <button onClick={handleQueryRemainingMinutes}>Query Remaining Time</button>
-        <button onClick={handleQueryOvertime}>Over Work Days Check</button>
+        <button className="set-btn" onClick={handleSetWorkTime}>Set Work Time</button>
+        <button className="cancel-btn" onClick={handleCancelWorkTime}>Cancel Work Time</button>
+        <button className="query-btn" onClick={handleQueryRemainingMinutes}>Query Remaining Time</button>
+        <button className="warning-btn" onClick={handleQueryOvertime}>Over Work Days Check</button>
+        <button className="email-btn" onClick={handleQueryOverworkByEmail}>Send Over Work Email to Management</button>
+
       </div>
     </div>
 
@@ -369,13 +404,17 @@ return (
       const dateStr = date.toISOString().split("T")[0];
       const blocks = workHours.filter(wh => wh.date === dateStr);
 
+      const DAY_COLUMN_HEIGHT = 1440;
+      const HOURS_IN_DAY = 24;
+      const PIXELS_PER_HOUR = DAY_COLUMN_HEIGHT / HOURS_IN_DAY;
+
       return (
         <div key={col} className="day-column">
           {blocks.map((block, i) => {
             const startMin = parseTime(block.startTime);
             const endMin = parseTime(block.endTime);
-            const top = (startMin / 60) * 40;       // 40px per hour
-            const height = ((endMin - startMin) / 60) * 40;
+            const top = (startMin / 60) * PIXELS_PER_HOUR ;    
+            const height = ((endMin - startMin) / 60) * PIXELS_PER_HOUR;
 
             return (
               <div

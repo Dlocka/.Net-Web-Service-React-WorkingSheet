@@ -7,10 +7,11 @@ using Microsoft.EntityFrameworkCore;
 public class WorkHourController : ControllerBase
 {
     private readonly IWorkHoursService _workHoursService;
-
-    public WorkHourController(IWorkHoursService workHoursService)
+    private readonly IEmailService _emailService;
+    public WorkHourController(IWorkHoursService workHoursService, IEmailService emailService)
     {
         _workHoursService = workHoursService;
+        _emailService = emailService;
     }
 
 
@@ -37,31 +38,31 @@ public class WorkHourController : ControllerBase
         // "creationOptions": 0,
         // "asyncState": null,
         // "isFaulted": false
-    #endregion
+        #endregion
         IEnumerable<WorkHour> WorkHours = await _workHoursService.GetWorkHoursInRange(staffId, startDate, endDate);
         return Ok(WorkHours);
-        
+
     }
 
     [HttpGet("remaining_worktime")]
-    public async Task<IActionResult> GetRemainingWorkTimeFromNow(int staffId, int JobId,string endDate, string endTime)
-{
+    public async Task<IActionResult> GetRemainingWorkTimeFromNow(int staffId, int JobId, string endDate, string endTime)
+    {
         Console.WriteLine(endDate);
         Console.WriteLine(endTime);
-    if (!DateOnly.TryParse(endDate, out var parsedDate) ||
-                !TimeOnly.TryParse(endTime, out var parsedTime))
+        if (!DateOnly.TryParse(endDate, out var parsedDate) ||
+                    !TimeOnly.TryParse(endTime, out var parsedTime))
         {
             return BadRequest("Invalid date or time format.");
         }
 
-    var endDateTime = parsedDate.ToDateTime(parsedTime);
+        var endDateTime = parsedDate.ToDateTime(parsedTime);
 
-    if (DateTime.Now >= endDateTime)
-        return BadRequest("End time must be in the future.");
+        if (DateTime.Now >= endDateTime)
+            return BadRequest("End time must be in the future.");
 
-    var remainingMinutes = await _workHoursService.GetRemainingWorkMinutesFromNowAsync(staffId,JobId, endDateTime);
-    return Ok(new { remainingMinutes });
-}
+        var remainingMinutes = await _workHoursService.GetRemainingWorkMinutesFromNowAsync(staffId, JobId, endDateTime);
+        return Ok(new { remainingMinutes });
+    }
 
     [HttpGet("get_overtime_days/{staffId}")]
     public async Task<IActionResult> GetOvertimeDays(int staffId, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
@@ -129,6 +130,24 @@ public class WorkHourController : ControllerBase
             ignored = result.ignored
         });
     }
+    
+    [HttpPost("overwork-days/email")]
+public async Task<IActionResult> GetOverworkDaysAndEmail([FromBody] OverworkEmailRequest request)
+{
+    var result = await _workHoursService.GetOverworkDaysAsync();
+
+    if (!result.Any())
+        return Ok(new { message = "No overwork records found." });
+
+    // Format email content
+        var body = "The following staff have worked over 10 hours:\n\n" +
+               string.Join("\n", result.Select(r => $"{r.Date}: {r.StaffName}"));
+
+    await _emailService.SendEmailAsync(request.Email, "Overwork Notification", body);
+        Console.WriteLine("email service has worked");
+    return Ok(new { message = "Email sent successfully." });
+
+}
     
     
 }

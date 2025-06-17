@@ -75,5 +75,8 @@ public class WorkHoursService : IWorkHoursService
             .ToList();
     }
 
-
+    public async Task<List<OverworkRecordDto>> GetOverworkDaysAsync(double thresholdHours = 10)
+    {
+        return await _reader.GetOverworkDaysAsync();
+    }
 }

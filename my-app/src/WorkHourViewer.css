@@ -4,7 +4,7 @@
 }
 
 .left-panel {
-  width: 260px;
+  width: 320px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -15,6 +15,7 @@
 .form-section {
   display: flex;
   flex-direction: column;
+  
 }
 
 .form-section label {
@@ -43,6 +44,7 @@
   text-align: center;
   font-weight: bold;
   background: #f0f0f0;
+  width: 150px;
 }
 
 .calendar-body {
@@ -56,16 +58,18 @@
 }
 
 .hour-label {
-  height: 40px;
+  height: 60px;
   border-bottom: 1px solid #ccc;
   padding-left: 4px;
-  font-size: 12px;
+  font-size: 16px;
   color: #555;
+  border: 1px solid black;
+  box-sizing: border-box;
 }
 
 .day-column {
   position: relative;
-  height: 960px; /* 24 * 40 */
+  height: 1440px; /* 24 * 40 */
   border-left: 1px solid #ccc;
   border-right: 1px solid #ccc;
 }
@@ -81,6 +85,74 @@
   border-radius: 4px;
   overflow: hidden;
   box-sizing: border-box;
+}
+.board-select{
+  font-size: 16px;
+  height: 40px;
+  padding: 4px 8px;
+}
+
+.board_input_select{
+  font-size: 16px;
+  height: 36px;
+  padding: 4px 8px;
+
+}
+.board_input_input{
+  font-size: 16px;
+  height: 36px;
+  padding: 4px 8px;
+
+}
+
+button {
+  padding: 8px 16px;
+  margin: 4px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.set-btn {
+  background-color: #007bff;
+  color: white;
+}
+.set-btn:hover {
+  background-color: #0056b3;
+}
+
+.cancel-btn {
+  background-color: #dc3545;
+  color: white;
+}
+.cancel-btn:hover {
+  background-color: #a71d2a;
+}
+
+.query-btn {
+  background-color: #6c757d;
+  color: white;
+}
+.query-btn:hover {
+  background-color: #5a6268;
+}
+
+.warning-btn {
+  background-color: #ffc107;
+  color: black;
+}
+.warning-btn:hover {
+  background-color: #e0a800;
+}
+
+.email-btn {
+  background-color: #28a745;
+  color: white;
+}
+.email-btn:hover {
+  background-color: #1e7e34;
 }
 
 

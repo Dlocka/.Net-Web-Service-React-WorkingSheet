@@ -14,9 +14,4 @@ type WorkHour = {
 
 const [workHours, setWorkHours] = useState<WorkHour[]>([]);
 
-useEffect(() => {
-  fetch(`${apiUrl}/api/workhours/staff/${staffId}`)
-    .then((res) => res.json())
-    .then(setWorkHours)
-    .catch(console.error);
-}, [staffId]);
+
